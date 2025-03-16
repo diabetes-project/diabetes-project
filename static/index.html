@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html >
+
+<head>
+  <meta charset="UTF-8">
+  <title>Ứng dụng dự báo chi phí điều trị đái tháo đường</title>
+  <link href='https://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Arimo' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Hind:300' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script defer>
+    document.addEventListener("DOMContentLoaded", function () {
+        let predictionModal = document.getElementById("prediction-modal");
+
+        // Nếu có giá trị dự báo thì hiển thị hộp thoại
+        if (predictionModal && predictionModal.querySelector("strong").textContent !== "--") {
+            predictionModal.style.display = "flex";
+        }
+    });
+
+    // Hàm đóng hộp thoại
+    function closeModal() {
+        document.getElementById("prediction-modal").style.display = "none";
+    }
+  </script>
+
+</head>
+
+<body>
+ <div class="login">
+	<h1>Dự báo chi phí điều trị một đợt của người bệnh đái tháo đường típ 2</h1>
+     <!-- <h3> Enter the following values to predict the annual cost of diabetes patient</h3> -->
+    <!-- Hộp thoại dự báo -->
+
+<div id="prediction-modal" class="modal" {% if prediction_cost %}style="display: flex;"{% else %}style="display: none;"{% endif %}>
+  <div class="modal-content">
+      <button class="close-btn" onclick="closeModal()">&times;</button>
+      <p><strong id="prediction-value">{{prediction_cost if prediction_cost else "--" }}</strong></p>
+  </div>
+</div>
+
+    <form action="{{ url_for('predict')}}"method="post">
+      <input type="number" name="Ky_QT_adjust" placeholder="Năm dự báo" required="required" />
+      <input type="text" name="hang" placeholder="Phân hạng CSKCB" list="hang" required="required" autocomplete="off" />
+        <datalist id="hang">
+          <option value="Đặc biệt"></option>
+          <option value="1"></option>
+          <option value="2"></option>
+          <option value="3"></option>
+          <option value="4"></option>
+          <option value="Không có hạng"></option>
+        </datalist>
+      <input type="text" name="GIOI_TINH" placeholder="Giới tính" list="GIOI_TINH" required="required" autocomplete="off">
+        <datalist id="GIOI_TINH">
+          <option value="1">Nam</option>
+          <option value="2">Nữ</option>
+        </datalist>
+      <input type="text" name="nhomTuoi" placeholder="Nhóm tuổi" list="nhomTuoi" required="required" autocomplete="off" >
+        <datalist id="nhomTuoi">
+          <option value="18-39"></option>
+          <option value="40-59"></option>
+          <option value="≥60"></option>
+        </datalist>
+      <input type="number" name="Tuổi" placeholder="Độ tuổi" required="required" />
+      <input type="text" name="HI" placeholder="Nhóm đối tượng tham gia BHYT" list="hi" required="required" autocomplete="off" >
+        <datalist id="hi">
+          <option value="Hộ gia đình đóng"></option>
+          <option value="Tổ chức BHXH đóng"></option>
+          <option value="Ngân sách Nhà nước đóng"></option>
+          <option value="Người lao động, người sử dụng lao động đóng"></option>
+          <option value="Ngân sách Nhà nước hỗ trợ đóng"></option>
+        </datalist>
+      <input type="text" name="insurance" placeholder="Mức hưởng BHYT" list="insurance" required="required" autocomplete="off" >
+        <datalist id="insurance">
+          <option value="80%"></option>
+          <option value="95%"></option>
+          <option value="100%"></option>
+        </datalist>
+      <input type="text" name="regions" placeholder="Vùng - khu vực đăng ký BHYT" list="regions" required="required" autocomplete="off" >
+        <datalist id="regions">
+          <option value="Đông Nam Bộ"></option>
+          <option value="Đồng Bằng Sông Hồng"></option>
+          <option value="Đồng Bằng Sông Cửu Long"></option>
+          <option value="Bộ Quốc Phòng, Chính phủ"></option>
+          <option value="Bắc Trung Bộ và Duyên Hải Miền Trung"></option>
+          <option value="Trung du và MN phía Bắc"></option>
+          <option value="Tây Nguyên"></option>
+        </datalist>
+        <input type="text" name="checkComorbidities" placeholder="Có/Không bệnh kèm" list="checkComorbidities" required="required" autocomplete="off" >
+        <datalist id="checkComorbidities">
+          <option value="0">Không bệnh kèm</option>
+          <option value="1">Có bệnh kèm</option>
+        </datalist>
+      <input type="text" name="comorbidities" placeholder="Loại bệnh kèm" list="comorbidities" required="required" autocomplete="off" >
+        <datalist id="comorbidities">
+          <option value="E78">Rối loạn lipid máu</option>
+          <option value="I10">Tăng huyết áp</option>
+          <option value="E78+I10">Rối loạn lipid máu + Tăng huyết áp</option>
+          <option value="Benh khac">Bệnh kèm khác hoặc không có bệnh kèm</option>
+        </datalist>
+      <input type="text" name="soBienChung_cat" placeholder="Số biến chứng" list="soBienChung_cat" required="required" autocomplete="off" >
+        <datalist id="soBienChung_cat">
+          <option value="0">Không có biến chứng</option>
+          <option value="1">Có 01 biến chứng</option>
+          <option value="2">Có 02 biến chứng</option>
+          <option value="3">Có từ 03 biến chứng trở lên</option>
+        </datalist>
+      <input type="text" name="loaiBienChung" placeholder="Loại biến chứng" list="loaiBienChung" required="required" autocomplete="off" >
+        <datalist id="loaiBienChung">
+          <option value="MML">Mạch máu lớn</option>
+          <option value="MMN">Mạch máu nhỏ</option>
+          <option value="BCCH">Biến chứng chuyển hoá</option>
+          <option value="MML+MMN">Mạch máu lớn + Mạch máu nhỏ</option>
+          <option value="MML+BCCH">Mạch máu lớn + Biến chứng chuyển hoá</option>
+          <option value="MMN+BCCH">Mạch máu nhỏ + Biến chứng chuyển hoá</option>
+          <option value="MML+MMN+BCCH">Mạch máu lớn + Mạch máu nhỏ + Biến chứng chuyển hoá</option>
+          <option value="Khong">Không có biến chứng</option>
+        </datalist>
+      <input type="text" name="diemBienChung_cat" placeholder="Điểm biến chứng" list="diemBienChung_cat" required="required" autocomplete="off" >
+        <datalist id="diemBienChung_cat">
+          <option value="0">0 điểm</option>
+          <option value="1">01 điểm</option>
+          <option value="2">02 điểm</option>
+          <option value="3">Từ 03 điểm trở lên</option>
+        </datalist>
+      <input type="text" name="tuyen" placeholder="Tuyến bệnh viện điều trị" list="tuyen" required="required" autocomplete="off" >
+        <datalist id="tuyen">
+          <option value="Trung ương"></option>
+          <option value="Tỉnh"></option>
+          <option value="Quận/Huyện"></option>
+          <option value="Xã/phường"></option>
+          <option value="YTCQ"></option>
+          <option value="Không phân tuyến"></option>
+        </datalist>
+      <input type="text" name="MA_LYDO_VVIEN" placeholder="Lý do vào viện" list="MA_LYDO_VVIEN" required="required" autocomplete="off">
+        <datalist id="MA_LYDO_VVIEN">
+          <option value="1">Đúng tuyến</option>
+          <option value="2">Cấp cứu</option>
+          <option value="3">Trái tuyến</option>
+          <option value="4">Thông tuyến</option>
+        </datalist>
+      <input type="text" name="MA_LOAI_KCB" placeholder="Hình thức khám chữa bệnh" list="MA_LOAI_KCB" required="required" autocomplete="off">
+        <datalist id="MA_LOAI_KCB">
+          <option value="1">Khám bệnh</option>
+          <option value="2">Điều trị ngoại trú</option>
+          <option value="3">Điều trị nội trú</option>
+          <option value="7">Nhận thuốc theo hẹn (không khám bệnh)</option>
+          <option value="9">Điều trị nội trú dưới 04 (bốn) giờ</option>
+        </datalist>
+      <input type="number" name="Số ngày điều trị" placeholder="Số ngày điều trị" required="required" />
+            
+      <button type="submit" class="btn">Dự báo</button>
+    
+    </form>
+
+   <br>
+   <br>
+   
+
+ </div>
+
+
+</body>
+</html>
